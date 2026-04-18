@@ -52,7 +52,8 @@ def get_price(url):
                 "#priceblock_ourprice",
                 "#priceblock_dealprice",
                 "#corePriceDisplay_desktop_feature_div .a-offscreen",
-                ".priceToPay .a-offscreen"
+                ".priceToPay .a-offscreen",
+                ".aok-offscreen"  # fallback (important)
             ]
 
             for selector in selectors:
@@ -60,11 +61,10 @@ def get_price(url):
                     locator = page.locator(selector)
                     if locator.count() > 0:
                         price_text = locator.first.text_content(timeout=5000)
-                        if price_text:
-                            price = ''.join(filter(str.isdigit, price_text))
-                            if price:
-                                browser.close()
-                                return int(price)
+                        if price_text and "₹" in price_text:
+                            price = float(price_text.replace("₹", "").replace(",", ""))
+                            browser.close()
+                            return int(price)
                 except:
                     continue
 
@@ -106,6 +106,8 @@ def send_telegram(message):
     try:
         
         if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+            print("TOKEN:", TELEGRAM_TOKEN)
+            print("CHAT ID:", TELEGRAM_CHAT_ID)
             print("❌ Telegram not configured")
             return
 
