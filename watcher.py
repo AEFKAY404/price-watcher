@@ -18,7 +18,7 @@ PRODUCTS = [
     },
     {
         "name": "crucial nvme SSD 512GB",
-        "url": "https://www.amazon.in/Crucial-Internal-Laptop-Desktop-Compatible/dp/B0GMPWGV88",
+        "url": "https://www.amazon.in/gp/product/B09W31WDWB",
         "target": 5500
     }
 ]
@@ -47,30 +47,23 @@ def get_price(url):
             page.wait_for_load_state("networkidle")
             time.sleep(4)
 
-            selectors = [
-                ".a-price .a-offscreen",
-                "#priceblock_ourprice",
-                "#priceblock_dealprice",
-                "#corePriceDisplay_desktop_feature_div .a-offscreen",
-                ".priceToPay .a-offscreen",
-                ".aok-offscreen"  # fallback (important)
-            ]
+            # Grab ALL visible prices on page
+            elements = page.locator(".a-offscreen").all()
 
-            for selector in selectors:
+            for el in elements:
                 try:
-                    locator = page.locator(selector)
-                    if locator.count() > 0:
-                        price_text = locator.first.text_content(timeout=5000)
-                        if price_text and "₹" in price_text:
-                            price = float(price_text.replace("₹", "").replace(",", ""))
+                    text = el.text_content()
+                    if text and "₹" in text:
+                        price = float(text.replace("₹", "").replace(",", ""))
+                        
+                        # Filter unrealistic values
+                        if 100 < price < 100000:
                             browser.close()
                             return int(price)
                 except:
                     continue
 
-            print("❌ Price not found for:", url)
-            page.screenshot(path="debug.png")  # debug
-
+            print("❌ No valid price found:", url)
             browser.close()
 
     except Exception as e:
