@@ -1,32 +1,40 @@
+import os
+import time
 import requests
-from bs4 import BeautifulSoup
+from datetime import datetime
+from playwright.sync_api import sync_playwright
 import smtplib
 from email.mime.text import MIMEText
-from datetime import datetime
-import os
 
-# 🔗 Product URL
-URL = "https://www.amazon.in/gp/product/B0CWLSP9FG/ref=ox_sc_act_title_1?smid=AJ6SIZC8YQDZX&psc=1"
+# =========================
+# 🔧 CONFIG
+# =========================
 
-# 🎯 Target price
-TARGET_PRICE = 4000
+PRODUCTS = [
+    {
+        "name": "crucial RAM 8GB",
+        "url": "https://www.amazon.in/gp/product/B0CWLSP9FG/ref=ox_sc_act_title_1?smid=AJ6SIZC8YQDZX&psc=1",
+        "target": 5500
+    },
+    {
+        "name": "crucial nvme SSD 512GB",
+        "url": "https://www.amazon.in/Crucial-Internal-Laptop-Desktop-Compatible/dp/B0GMPWGV88/ref=sr_1_6?crid=10VK5J9JRYTEG&dib=eyJ2IjoiMSJ9.KkkpK5xoP9DOBtuPNnePO33GifZozY3KAxRE2z8gYyyYkxGXcPWu3-tjLsAjk_BOp0IhvbkQI40JWsPCMx-nuZjU0_dJyqRtsG-pyBKvDuDk26TSaXkow5MQDufQ58d_bWqVQWXsKzwikRFT78XXGRJRzMZlCzo6k5tOVuNYxNSgJjjajQdpHlOUuY6Zsijv_eN8Cv0dm4bNw2lovjJi3KWJ7YWQfNj0WSB-tRhjfrc.sJM9y73M9rLyIDMqQbk3KcDxAcX5Ynh1aTWK0GTbW6s&dib_tag=se&keywords=nvme+ssd+512gb&qid=1776537146&sprefix=nvme+ssd+5%2Caps%2C386&sr=8-6",
+        "target": 5500
+    },
+]
 
-# 🔐 Environment variables (Render)
 EMAIL = os.getenv("EMAIL")
 PASSWORD = os.getenv("PASSWORD")
 TO_EMAIL = os.getenv("TO_EMAIL")
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-    "Accept-Language": "en-IN,en;q=0.9"
-}
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-from playwright.sync_api import sync_playwright
+# =========================
+# 🧠 SCRAPER
+# =========================
 
-from playwright.sync_api import sync_playwright
-import time
-
-def get_price():
+def get_price(url):
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
@@ -35,15 +43,10 @@ def get_price():
             )
             page = context.new_page()
 
-            page.goto(URL, timeout=60000)
-
-            # wait for full load
+            page.goto(url, timeout=60000)
             page.wait_for_load_state("networkidle")
-
-            # small delay (VERY important for Amazon)
             time.sleep(3)
 
-            # Try multiple selectors
             selectors = [
                 ".a-price .a-offscreen",
                 "#priceblock_ourprice",
@@ -60,19 +63,20 @@ def get_price():
                 except:
                     continue
 
-            print("❌ Price not found (Playwright)")
-
             browser.close()
-
     except Exception as e:
         print("❌ Playwright error:", e)
 
     return None
 
-def send_email(price):
+# =========================
+# 📧 EMAIL (only on drop)
+# =========================
+
+def send_email(product, price):
     try:
-        msg = MIMEText(f"🔥 Price dropped to ₹{price}!\n{URL}")
-        msg["Subject"] = "Price Drop Alert"
+        msg = MIMEText(f"🔥 {product['name']} dropped to ₹{price}\n{product['url']}")
+        msg["Subject"] = f"Price Alert: {product['name']}"
         msg["From"] = EMAIL
         msg["To"] = TO_EMAIL
 
@@ -80,19 +84,49 @@ def send_email(price):
             server.login(EMAIL, PASSWORD)
             server.send_message(msg)
 
-        print("✅ Email sent!")
-
+        print(f"📧 Email sent for {product['name']}")
     except Exception as e:
         print("❌ Email failed:", e)
 
+# =========================
+# 📱 TELEGRAM (always)
+# =========================
+
+def send_telegram(message):
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        data = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message
+        }
+        requests.post(url, data=data)
+    except Exception as e:
+        print("❌ Telegram failed:", e)
+
+# =========================
+# 🚀 MAIN LOGIC
+# =========================
 
 def main():
-    price = get_price()
-    print(f"{datetime.now()} - Current price: {price}")
+    report = f"📊 Price Check ({datetime.now()})\n\n"
 
-    if price and price <= TARGET_PRICE:
-        send_email(price)
+    for product in PRODUCTS:
+        price = get_price(product["url"])
 
+        if price:
+            report += f"{product['name']}: ₹{price}\n"
+
+            # Email ONLY if below target
+            if price <= product["target"]:
+                send_email(product, price)
+
+        else:
+            report += f"{product['name']}: ❌ Failed\n"
+
+    # Telegram always sends full report
+    send_telegram(report)
+
+    print(report)
 
 if __name__ == "__main__":
     main()
