@@ -13,12 +13,12 @@ from email.mime.text import MIMEText
 PRODUCTS = [
     {
         "name": "crucial RAM 8GB",
-        "url": "https://www.amazon.in/gp/product/B0CWLSP9FG/ref=ox_sc_act_title_1?smid=AJ6SIZC8YQDZX&psc=1",
+        "url": "https://www.amazon.in/gp/product/B0CWLSP9FG",
         "target": 5500
     },
     {
         "name": "crucial nvme SSD 512GB",
-        "url": "https://www.amazon.in/Crucial-Internal-Laptop-Desktop-Compatible/dp/B0GMPWGV88/ref=sr_1_6?crid=10VK5J9JRYTEG&dib=eyJ2IjoiMSJ9.KkkpK5xoP9DOBtuPNnePO33GifZozY3KAxRE2z8gYyyYkxGXcPWu3-tjLsAjk_BOp0IhvbkQI40JWsPCMx-nuZjU0_dJyqRtsG-pyBKvDuDk26TSaXkow5MQDufQ58d_bWqVQWXsKzwikRFT78XXGRJRzMZlCzo6k5tOVuNYxNSgJjjajQdpHlOUuY6Zsijv_eN8Cv0dm4bNw2lovjJi3KWJ7YWQfNj0WSB-tRhjfrc.sJM9y73M9rLyIDMqQbk3KcDxAcX5Ynh1aTWK0GTbW6s&dib_tag=se&keywords=nvme+ssd+512gb&qid=1776538190&sprefix=nvme+ssd+5%2Caps%2C386&sr=8-6",
+        "url": "https://www.amazon.in/Crucial-Internal-Laptop-Desktop-Compatible/dp/B0GMPWGV88",
         "target": 5500
     }
 ]
@@ -104,6 +104,7 @@ def send_email(product, price):
 
 def send_telegram(message):
     try:
+        
         if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
             print("❌ Telegram not configured")
             return
@@ -121,13 +122,15 @@ def send_telegram(message):
     except Exception as e:
         print("❌ Telegram failed:", e)
 
+        
+
 # =========================
 # 🚀 MAIN
 # =========================
 
 def main():
     report = f"📊 Price Check ({datetime.now()})\n\n"
-
+    send_telegram("TEST MESSAGE")
     for product in PRODUCTS:
         price = get_price(product["url"])
 
