@@ -13,12 +13,12 @@ from email.mime.text import MIMEText
 PRODUCTS = [
     {
         "name": "crucial RAM 8GB",
-        "url": "https://www.amazon.in/gp/product/B0CWLSP9FG",
+        "url": "https://www.amazon.in/dp/product/B0CWLSP9FG",
         "target": 5500
     },
     {
         "name": "crucial nvme SSD 512GB",
-        "url": "https://www.amazon.in/gp/product/B09W31WDWB",
+        "url": "https://www.amazon.in/dp/product/B09W31WDWB",
         "target": 5500
     }
 ]
