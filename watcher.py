@@ -22,22 +22,19 @@ HEADERS = {
 }
 
 def get_price():
-    try:
-        response = requests.get(URL, headers=HEADERS)
-        soup = BeautifulSoup(response.text, "html.parser")
+    response = requests.get(URL, headers=HEADERS)
+    soup = BeautifulSoup(response.text, "html.parser")
 
-        price_tag = soup.select_one(".a-price .a-offscreen")
+    price_tag = soup.select_one(".a-price .a-offscreen")
 
-        if price_tag:
-            price_text = price_tag.get_text().strip()
-            price = price_text.replace("₹", "").replace(",", "")
-            return int(float(price))
+    if price_tag:
+        price_text = price_tag.get_text().strip()
+       
 
-    except Exception as e:
-        print("❌ Error fetching price:", e)
+        price = price_text.replace("₹", "").replace(",", "").strip()
+        return int(float(price))  # <-- FIX HERE
 
     return None
-
 
 def send_email(price):
     try:
