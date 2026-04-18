@@ -97,11 +97,8 @@ def send_email(product, price):
 
 def send_telegram(message):
     try:
-        
         if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
-            print("TOKEN:", TELEGRAM_TOKEN)
-            print("CHAT ID:", TELEGRAM_CHAT_ID)
-            print("❌ Telegram not configured")
+            print("⚠️ Telegram not configured")
             return
 
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -112,11 +109,13 @@ def send_telegram(message):
 
         response = requests.post(url, data=data)
 
-        print("📱 Telegram response:", response.text)
+        if response.status_code == 200:
+            print("📱 Telegram sent")
+        else:
+            print("❌ Telegram failed")
 
     except Exception as e:
-        print("❌ Telegram failed:", e)
-
+        print("❌ Telegram error")
         
 
 # =========================
