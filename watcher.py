@@ -21,38 +21,29 @@ HEADERS = {
     "Accept-Language": "en-IN,en;q=0.9"
 }
 
+from playwright.sync_api import sync_playwright
+
 def get_price():
     try:
-        response = requests.get(URL, headers=HEADERS)
-        html = response.text
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
 
-        # Debug (IMPORTANT)
-        if "captcha" in html.lower():
-            print("❌ Blocked by Amazon (CAPTCHA detected)")
-            return None
+            page.goto(URL, timeout=60000)
 
-        soup = BeautifulSoup(html, "html.parser")
+            # wait for price to load
+            page.wait_for_selector(".a-price", timeout=10000)
 
-        # Try multiple selectors (Amazon changes often)
-        selectors = [
-            ".a-price .a-offscreen",
-            "#priceblock_ourprice",
-            "#priceblock_dealprice",
-            ".a-price-whole"
-        ]
+            price_text = page.locator(".a-price .a-offscreen").first.text_content()
 
-        for selector in selectors:
-            price_tag = soup.select_one(selector)
-            if price_tag:
-                price_text = price_tag.get_text().strip()
-                price = ''.join(filter(str.isdigit, price_text))
-                if price:
-                    return int(price)
+            browser.close()
 
-        print("❌ Price not found in page")
+            if price_text:
+                price = price_text.replace("₹", "").replace(",", "")
+                return int(float(price))
 
     except Exception as e:
-        print("❌ Error fetching price:", e)
+        print("❌ Playwright error:", e)
 
     return None
 
