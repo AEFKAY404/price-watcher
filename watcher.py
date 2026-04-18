@@ -23,24 +23,46 @@ HEADERS = {
 
 from playwright.sync_api import sync_playwright
 
+from playwright.sync_api import sync_playwright
+import time
+
 def get_price():
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            )
+            page = context.new_page()
 
             page.goto(URL, timeout=60000)
 
-            # wait for price to load
-            page.wait_for_selector(".a-price", timeout=10000)
+            # wait for full load
+            page.wait_for_load_state("networkidle")
 
-            price_text = page.locator(".a-price .a-offscreen").first.text_content()
+            # small delay (VERY important for Amazon)
+            time.sleep(3)
+
+            # Try multiple selectors
+            selectors = [
+                ".a-price .a-offscreen",
+                "#priceblock_ourprice",
+                "#priceblock_dealprice"
+            ]
+
+            for selector in selectors:
+                try:
+                    price_text = page.locator(selector).first.text_content(timeout=5000)
+                    if price_text:
+                        price = price_text.replace("₹", "").replace(",", "")
+                        browser.close()
+                        return int(float(price))
+                except:
+                    continue
+
+            print("❌ Price not found (Playwright)")
 
             browser.close()
-
-            if price_text:
-                price = price_text.replace("₹", "").replace(",", "")
-                return int(float(price))
 
     except Exception as e:
         print("❌ Playwright error:", e)
