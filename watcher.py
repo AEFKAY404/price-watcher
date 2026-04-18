@@ -22,17 +22,37 @@ HEADERS = {
 }
 
 def get_price():
-    response = requests.get(URL, headers=HEADERS)
-    soup = BeautifulSoup(response.text, "html.parser")
+    try:
+        response = requests.get(URL, headers=HEADERS)
+        html = response.text
 
-    price_tag = soup.select_one(".a-price .a-offscreen")
+        # Debug (IMPORTANT)
+        if "captcha" in html.lower():
+            print("❌ Blocked by Amazon (CAPTCHA detected)")
+            return None
 
-    if price_tag:
-        price_text = price_tag.get_text().strip()
-       
+        soup = BeautifulSoup(html, "html.parser")
 
-        price = price_text.replace("₹", "").replace(",", "").strip()
-        return int(float(price))  # <-- FIX HERE
+        # Try multiple selectors (Amazon changes often)
+        selectors = [
+            ".a-price .a-offscreen",
+            "#priceblock_ourprice",
+            "#priceblock_dealprice",
+            ".a-price-whole"
+        ]
+
+        for selector in selectors:
+            price_tag = soup.select_one(selector)
+            if price_tag:
+                price_text = price_tag.get_text().strip()
+                price = ''.join(filter(str.isdigit, price_text))
+                if price:
+                    return int(price)
+
+        print("❌ Price not found in page")
+
+    except Exception as e:
+        print("❌ Error fetching price:", e)
 
     return None
 
