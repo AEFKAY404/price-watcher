@@ -13,14 +13,14 @@ from email.mime.text import MIMEText
 PRODUCTS = [
     {
         "name": "crucial RAM 8GB",
-        "url": "https://www.amazon.in/gp/product/B0CWLSP9FG/ref=ox_sc_act_title_1?smid=AJ6SIZC8YQDZX&psc=1",
-        "target": 5500
+        "url": "https://www.amazon.in/dp/B0CG3H8TTN",
+        "target": 4000
     },
     {
         "name": "crucial nvme SSD 512GB",
-        "url": "https://www.amazon.in/Crucial-Internal-Laptop-Desktop-Compatible/dp/B0GMPWGV88/ref=sr_1_6?crid=10VK5J9JRYTEG&dib=eyJ2IjoiMSJ9.KkkpK5xoP9DOBtuPNnePO33GifZozY3KAxRE2z8gYyyYkxGXcPWu3-tjLsAjk_BOp0IhvbkQI40JWsPCMx-nuZjU0_dJyqRtsG-pyBKvDuDk26TSaXkow5MQDufQ58d_bWqVQWXsKzwikRFT78XXGRJRzMZlCzo6k5tOVuNYxNSgJjjajQdpHlOUuY6Zsijv_eN8Cv0dm4bNw2lovjJi3KWJ7YWQfNj0WSB-tRhjfrc.sJM9y73M9rLyIDMqQbk3KcDxAcX5Ynh1aTWK0GTbW6s&dib_tag=se&keywords=nvme+ssd+512gb&qid=1776537146&sprefix=nvme+ssd+5%2Caps%2C386&sr=8-6",
-        "target": 5500
-    },
+        "url": "PASTE_SSD_LINK_HERE",
+        "target": 3500
+    }
 ]
 
 EMAIL = os.getenv("EMAIL")
@@ -45,25 +45,34 @@ def get_price(url):
 
             page.goto(url, timeout=60000)
             page.wait_for_load_state("networkidle")
-            time.sleep(3)
+            time.sleep(4)
 
             selectors = [
                 ".a-price .a-offscreen",
                 "#priceblock_ourprice",
-                "#priceblock_dealprice"
+                "#priceblock_dealprice",
+                "#corePriceDisplay_desktop_feature_div .a-offscreen",
+                ".priceToPay .a-offscreen"
             ]
 
             for selector in selectors:
                 try:
-                    price_text = page.locator(selector).first.text_content(timeout=5000)
-                    if price_text:
-                        price = price_text.replace("₹", "").replace(",", "")
-                        browser.close()
-                        return int(float(price))
+                    locator = page.locator(selector)
+                    if locator.count() > 0:
+                        price_text = locator.first.text_content(timeout=5000)
+                        if price_text:
+                            price = ''.join(filter(str.isdigit, price_text))
+                            if price:
+                                browser.close()
+                                return int(price)
                 except:
                     continue
 
+            print("❌ Price not found for:", url)
+            page.screenshot(path="debug.png")  # debug
+
             browser.close()
+
     except Exception as e:
         print("❌ Playwright error:", e)
 
@@ -85,6 +94,7 @@ def send_email(product, price):
             server.send_message(msg)
 
         print(f"📧 Email sent for {product['name']}")
+
     except Exception as e:
         print("❌ Email failed:", e)
 
@@ -94,17 +104,25 @@ def send_email(product, price):
 
 def send_telegram(message):
     try:
+        if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+            print("❌ Telegram not configured")
+            return
+
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
         data = {
             "chat_id": TELEGRAM_CHAT_ID,
             "text": message
         }
-        requests.post(url, data=data)
+
+        response = requests.post(url, data=data)
+
+        print("📱 Telegram response:", response.text)
+
     except Exception as e:
         print("❌ Telegram failed:", e)
 
 # =========================
-# 🚀 MAIN LOGIC
+# 🚀 MAIN
 # =========================
 
 def main():
@@ -116,14 +134,11 @@ def main():
         if price:
             report += f"{product['name']}: ₹{price}\n"
 
-            # Email ONLY if below target
             if price <= product["target"]:
                 send_email(product, price)
-
         else:
             report += f"{product['name']}: ❌ Failed\n"
 
-    # Telegram always sends full report
     send_telegram(report)
 
     print(report)
