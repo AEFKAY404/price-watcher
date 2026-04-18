@@ -13,13 +13,13 @@ from email.mime.text import MIMEText
 PRODUCTS = [
     {
         "name": "crucial RAM 8GB",
-        "url": "https://www.amazon.in/dp/B0CG3H8TTN",
-        "target": 4000
+        "url": "https://www.amazon.in/gp/product/B0CWLSP9FG/ref=ox_sc_act_title_1?smid=AJ6SIZC8YQDZX&psc=1",
+        "target": 5500
     },
     {
         "name": "crucial nvme SSD 512GB",
-        "url": "PASTE_SSD_LINK_HERE",
-        "target": 3500
+        "url": "https://www.amazon.in/Crucial-Internal-Laptop-Desktop-Compatible/dp/B0GMPWGV88/ref=sr_1_6?crid=10VK5J9JRYTEG&dib=eyJ2IjoiMSJ9.KkkpK5xoP9DOBtuPNnePO33GifZozY3KAxRE2z8gYyyYkxGXcPWu3-tjLsAjk_BOp0IhvbkQI40JWsPCMx-nuZjU0_dJyqRtsG-pyBKvDuDk26TSaXkow5MQDufQ58d_bWqVQWXsKzwikRFT78XXGRJRzMZlCzo6k5tOVuNYxNSgJjjajQdpHlOUuY6Zsijv_eN8Cv0dm4bNw2lovjJi3KWJ7YWQfNj0WSB-tRhjfrc.sJM9y73M9rLyIDMqQbk3KcDxAcX5Ynh1aTWK0GTbW6s&dib_tag=se&keywords=nvme+ssd+512gb&qid=1776538190&sprefix=nvme+ssd+5%2Caps%2C386&sr=8-6",
+        "target": 5500
     }
 ]
 
