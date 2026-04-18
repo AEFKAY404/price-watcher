@@ -20,7 +20,12 @@ PRODUCTS = [
         "name": "crucial nvme SSD 512GB",
         "url": "https://www.amazon.in/dp/product/B09W31WDWB",
         "target": 5500
-    }
+    },
+    {
+        "name": "Bandai Spirits HG 1/144 Gundam Astray Gold Frame",
+        "url": "https://www.amazon.in/dp/product/B07PFVNN37",
+        "target": 3500
+    },
 ]
 
 EMAIL = os.getenv("EMAIL")
