@@ -124,7 +124,6 @@ def send_telegram(message):
 
 def main():
     report = f"📊 Price Check ({datetime.now()})\n\n"
-    send_telegram("TEST MESSAGE")
     for product in PRODUCTS:
         price = get_price(product["url"])
 
