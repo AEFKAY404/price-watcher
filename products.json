@@ -1,12 +1,17 @@
 [
   {
-    "name": "crucial RAM 8GB",
-    "url": "https://www.amazon.in/dp/product/B0CWLSP9FG",
-    "target": 5500
+    "name" : "crucial nvme SSD 512GB",
+    "target" : 5500,
+    "url" : "https:\/\/www.amazon.in\/dp\/product\/B09W31WDWB"
   },
   {
-    "name": "crucial nvme SSD 512GB",
-    "url": "https://www.amazon.in/dp/product/B09W31WDWB",
-    "target": 5500
+    "name" : "crucial RAM 8GB",
+    "target" : 5500,
+    "url" : "https:\/\/www.amazon.in\/dp\/product\/B0CWLSP9FG"
+  },
+  {
+    "name" : "Lego",
+    "target" : 1000,
+    "url" : "https:\/\/www.amazon.in\/dp\/B0BBRXC9HN"
   }
 ]
