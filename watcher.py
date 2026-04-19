@@ -15,7 +15,7 @@ def load_products():
     try:
         with open("products.json", "r") as f:
             return json.load(f)
-    except Exception as e:
+    except:
         print("❌ Failed to load products.json")
         return []
 
@@ -25,6 +25,9 @@ TO_EMAIL = os.getenv("TO_EMAIL")
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 # =========================
 # 🧠 SCRAPER
@@ -43,7 +46,6 @@ def get_price(url):
             page.wait_for_load_state("networkidle")
             time.sleep(4)
 
-            # Grab ALL visible prices on page
             elements = page.locator(".a-offscreen").all()
 
             for el in elements:
@@ -51,24 +53,22 @@ def get_price(url):
                     text = el.text_content()
                     if text and "₹" in text:
                         price = float(text.replace("₹", "").replace(",", ""))
-                        
-                        # Filter unrealistic values
-                        if 100 < price < 100000:
+                        if 100 < price < 200000:
                             browser.close()
                             return int(price)
                 except:
                     continue
 
-            print("❌ No valid price found:", url)
+            print("❌ Price not found")
             browser.close()
 
-    except Exception as e:
-        print("❌ Playwright error:", e)
+    except Exception:
+        print("❌ Playwright error")
 
     return None
 
 # =========================
-# 📧 EMAIL (only on drop)
+# 📧 EMAIL
 # =========================
 
 def send_email(product, price):
@@ -84,11 +84,11 @@ def send_email(product, price):
 
         print(f"📧 Email sent for {product['name']}")
 
-    except Exception as e:
-        print("❌ Email failed:", e)
+    except:
+        print("❌ Email failed")
 
 # =========================
-# 📱 TELEGRAM (always)
+# 📱 TELEGRAM
 # =========================
 
 def send_telegram(message):
@@ -98,21 +98,41 @@ def send_telegram(message):
             return
 
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        data = {
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": message
+        requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": message})
+
+        print("📱 Telegram sent")
+
+    except:
+        print("❌ Telegram error")
+
+# =========================
+# 🌐 SUPABASE
+# =========================
+
+def send_to_supabase(rows):
+    try:
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            print("⚠️ Supabase not configured")
+            return
+
+        url = f"{SUPABASE_URL}/rest/v1/prices"
+
+        headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
         }
 
-        response = requests.post(url, data=data)
+        response = requests.post(url, json=rows, headers=headers)
 
-        if response.status_code == 200:
-            print("📱 Telegram sent")
+        if response.status_code in (200, 201):
+            print("🟢 Data sent to Supabase")
         else:
-            print("❌ Telegram failed")
+            print("❌ Supabase insert failed")
 
-    except Exception as e:
-        print("❌ Telegram error")
-        
+    except:
+        print("❌ Supabase error")
 
 # =========================
 # 🚀 MAIN
@@ -125,7 +145,9 @@ def main():
     if not products:
         print("⚠️ No products found")
         return
-    
+
+    rows = []
+
     for product in products:
         price = get_price(product["url"])
 
@@ -137,7 +159,17 @@ def main():
         else:
             report += f"{product['name']}: ❌ Failed\n"
 
+        # ✅ Always store row
+        rows.append({
+            "name": product["name"],
+            "price": price if price else None,
+            "target": product["target"],
+            "url": product["url"],
+            "timestamp": datetime.now().isoformat()
+        })
+
     send_telegram(report)
+    send_to_supabase(rows)
 
     print(report)
 
