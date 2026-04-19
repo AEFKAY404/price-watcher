@@ -115,24 +115,24 @@ def send_to_supabase(rows):
             print("⚠️ Supabase not configured")
             return
 
-        url = f"{SUPABASE_URL}/rest/v1/prices"
+        url = f"{SUPABASE_URL}/rest/v1/prices?on_conflict=url"
 
         headers = {
             "apikey": SUPABASE_KEY,
             "Authorization": f"Bearer {SUPABASE_KEY}",
             "Content-Type": "application/json",
-            "Prefer": "return=minimal"
+            "Prefer": "resolution=merge-duplicates"
         }
 
         response = requests.post(url, json=rows, headers=headers)
 
         if response.status_code in (200, 201):
-            print("🟢 Data sent to Supabase")
+            print("🟢 Supabase UPSERT success")
         else:
-            print("❌ Supabase insert failed:", response.text)
+            print("❌ Supabase error:", response.text)
 
-    except:
-        print("❌ Supabase error")
+    except Exception as e:
+        print("❌ Supabase exception:", e)
 
 # =========================
 # 🚀 MAIN
