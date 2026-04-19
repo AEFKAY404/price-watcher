@@ -129,7 +129,7 @@ def send_to_supabase(rows):
         if response.status_code in (200, 201):
             print("🟢 Data sent to Supabase")
         else:
-            print("❌ Supabase insert failed")
+            print("❌ Supabase insert failed:", response.text)
 
     except:
         print("❌ Supabase error")
