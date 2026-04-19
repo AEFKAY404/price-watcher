@@ -126,7 +126,7 @@ def main():
         print("⚠️ No products found")
         return
     
-    for product in PRODUCTS:
+    for product in products:
         price = get_price(product["url"])
 
         if price:
