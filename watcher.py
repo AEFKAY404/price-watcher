@@ -4,29 +4,20 @@ import requests
 from datetime import datetime
 from playwright.sync_api import sync_playwright
 import smtplib
+import json
 from email.mime.text import MIMEText
 
 # =========================
 # 🔧 CONFIG
 # =========================
 
-PRODUCTS = [
-    {
-        "name": "crucial RAM 8GB",
-        "url": "https://www.amazon.in/dp/product/B0CWLSP9FG",
-        "target": 5500
-    },
-    {
-        "name": "crucial nvme SSD 512GB",
-        "url": "https://www.amazon.in/dp/product/B09W31WDWB",
-        "target": 5500
-    },
-    {
-        "name": "Bandai Spirits HG 1/144 Gundam Astray Gold Frame",
-        "url": "https://www.amazon.in/dp/product/B07PFVNN37",
-        "target": 3500
-    },
-]
+def load_products():
+    try:
+        with open("products.json", "r") as f:
+            return json.load(f)
+    except Exception as e:
+        print("❌ Failed to load products.json")
+        return []
 
 EMAIL = os.getenv("EMAIL")
 PASSWORD = os.getenv("PASSWORD")
@@ -129,6 +120,12 @@ def send_telegram(message):
 
 def main():
     report = f"📊 Price Check ({datetime.now()})\n\n"
+    products = load_products()
+
+    if not products:
+        print("⚠️ No products found")
+        return
+    
     for product in PRODUCTS:
         price = get_price(product["url"])
 
